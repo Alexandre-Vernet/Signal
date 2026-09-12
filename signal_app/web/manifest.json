@@ -1,6 +1,6 @@
 {
-    "name": "signal_app",
-    "short_name": "signal_app",
+    "name": "Signal",
+    "short_name": "Signal",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
