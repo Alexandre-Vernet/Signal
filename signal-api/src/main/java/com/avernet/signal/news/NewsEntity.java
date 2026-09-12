@@ -3,6 +3,7 @@ package com.avernet.signal.news;
 import com.avernet.signal.news.news_categories.NewsCategoriesEntity;
 import com.avernet.signal.news.news_countries.NewsCountriesEntity;
 import com.avernet.signal.news.news_keywords.NewsKeywordsEntity;
+import com.avernet.signal.user_news.UserNewsEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -64,4 +65,7 @@ public class NewsEntity {
 
     @OneToMany(mappedBy = "news", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<NewsCountriesEntity> countries = new ArrayList<>();
+
+    @OneToMany(mappedBy = "news", fetch = FetchType.LAZY)
+    List<UserNewsEntity> userNews = new ArrayList<>();
 }
