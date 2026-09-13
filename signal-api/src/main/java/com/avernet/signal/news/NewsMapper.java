@@ -4,10 +4,18 @@ import com.avernet.signal.config.GenericMapper;
 import com.avernet.signal.news.news_categories.NewsCategoriesEntity;
 import com.avernet.signal.news.news_countries.NewsCountriesEntity;
 import com.avernet.signal.news.news_keywords.NewsKeywordsEntity;
+import com.avernet.signal.user_news.UserNewsEntity;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface NewsMapper extends GenericMapper<News, NewsEntity> {
+
+    @Mapping(source = "news", target = ".")
+    @Mapping(source = "bookmarked", target = "bookmarked")
+    @Mapping(source = "readAt", target = "readAt")
+    News toDto(UserNewsEntity userNewsEntity);
+
     default String mapKeyword(NewsKeywordsEntity keywordsEntity) {
         return keywordsEntity.getKeyword();
     }

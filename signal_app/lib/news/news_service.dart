@@ -9,7 +9,9 @@ class NewsService {
   // final String baseUrl = "http://localhost:8080/api";
 
   Future<List<News>> findAllNews() async {
-    final response = await http.get(Uri.parse('$baseUrl/news'));
+    final response = await http.get(Uri.parse('$baseUrl/news'), headers: {
+      "X-User-UUID": "uuid"
+    });
     if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
 
@@ -81,5 +83,31 @@ class NewsService {
     }
 
     throw Exception('Erreur lors du chargement des news');
+  }
+
+  Future<News> markNewsAsRead(int id) async {
+    final response = await http.post(Uri.parse('$baseUrl/news/$id/read'), headers: {
+      "X-User-UUID": "uuid"
+    });
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> json = jsonDecode(response.body);
+
+      return News.fromJson(json);
+    }
+
+    throw Exception('Erreur lors du chargement des actualités');
+  }
+
+  Future<News> toggleBookmark(int id) async {
+    final response = await http.post(Uri.parse('$baseUrl/news/$id/bookmark'), headers: {
+      "X-User-UUID": "uuid"
+    });
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> json = jsonDecode(response.body);
+
+      return News.fromJson(json);
+    }
+
+    throw Exception('Erreur lors du chargement des actualités');
   }
 }

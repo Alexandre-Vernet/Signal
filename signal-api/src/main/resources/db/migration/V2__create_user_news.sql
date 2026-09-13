@@ -14,6 +14,7 @@ CREATE TABLE public.user_news
     user_id bigserial               NOT NULL,
     news_id bigserial               NOT NULL,
     read_at timestamp NULL,
+    is_bookmarked bool default false NOT NULL,
     CONSTRAINT user_news_pk PRIMARY KEY (id),
     CONSTRAINT user_news_unique UNIQUE (user_id,news_id),
     CONSTRAINT user_news_users_fk FOREIGN KEY (user_id) REFERENCES public.users (id),

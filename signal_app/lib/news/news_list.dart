@@ -31,6 +31,8 @@ class NewsListState extends State<NewsList> {
 
   @override
   Widget build(BuildContext context) {
+    final isRead = widget.news.readAt != null;
+
     return Card(
       elevation: 0,
       color: Colors.white,
@@ -43,6 +45,7 @@ class NewsListState extends State<NewsList> {
       ),
       child: InkWell(
         onTap: widget.onTap,
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
@@ -64,10 +67,14 @@ class NewsListState extends State<NewsList> {
                       widget.news.title,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 17,
-                        fontWeight: FontWeight.w700,
+                        fontWeight:
+                        isRead ? FontWeight.w500 : FontWeight.w700,
                         height: 1.2,
+                        color: isRead
+                            ? Colors.grey.shade700
+                            : Colors.black,
                       ),
                     ),
 
@@ -94,6 +101,16 @@ class NewsListState extends State<NewsList> {
 
                         const Spacer(),
 
+                        if (isRead)
+                          Icon(
+                            Icons.check_circle_outline_rounded,
+                            size: 17,
+                            color: Colors.grey.shade400,
+                          ),
+
+                        if (isRead)
+                          const SizedBox(width: 8),
+
                         Icon(
                           Icons.arrow_forward_ios_rounded,
                           size: 15,
@@ -110,7 +127,6 @@ class NewsListState extends State<NewsList> {
       ),
     );
   }
-
   Widget _buildPublicationImage() {
     if (widget.news.imageUrl == null || widget.news.imageUrl!.isEmpty) {
       return Container(

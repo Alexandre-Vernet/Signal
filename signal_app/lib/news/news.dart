@@ -11,6 +11,8 @@ class News {
   final DateTime publicationDate;
   final String sourceName;
   final String sourceIcon;
+  final DateTime? readAt;
+  final bool? bookmarked;
 
   News({
     required this.id,
@@ -25,6 +27,8 @@ class News {
     required this.publicationDate,
     required this.sourceName,
     required this.sourceIcon,
+    this.readAt,
+    this.bookmarked,
   });
 
   factory News.fromJson(Map<String, dynamic> json) {
@@ -41,6 +45,10 @@ class News {
       publicationDate: DateTime.parse(json['publicationDate']),
       sourceName: json['sourceName'],
       sourceIcon: json['sourceIcon'],
+      readAt: json['readAt'] == null
+          ? null
+          : DateTime.parse(json['readAt']),
+      bookmarked: json['bookmarked'],
     );
   }
 }

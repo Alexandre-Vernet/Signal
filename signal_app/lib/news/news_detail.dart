@@ -25,6 +25,15 @@ class NewsDetailState extends State<NewsDetail> {
   void initState() {
     super.initState();
     loadNews();
+    markNewsAsRead();
+  }
+  
+  Future<void> markNewsAsRead() async {
+    try {
+      await newsService.markNewsAsRead(widget.newsId);
+    } catch(e) {
+      print(e);
+    }
   }
 
   Future<void> loadNews() async {
@@ -63,6 +72,19 @@ class NewsDetailState extends State<NewsDetail> {
           'Article',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
+        actions: [
+          IconButton(
+            tooltip: news.bookmarked == true
+                ? 'Retirer des favoris'
+                : 'Ajouter aux favoris',
+            icon: Icon(
+              news.bookmarked == true
+                  ? Icons.bookmark_rounded
+                  : Icons.bookmark_border_rounded,
+            ),
+            onPressed: toggleBookmark,
+          ),
+        ],
       ),
 
       body: SingleChildScrollView(
@@ -209,5 +231,16 @@ class NewsDetailState extends State<NewsDetail> {
         ),
       ),
     );
+  }
+  
+  void toggleBookmark() async {
+    try {
+     final response = await newsService.toggleBookmark(widget.newsId);
+     setState(() {
+       news = response;
+     });
+    } catch(e) {
+      print(e);
+    }
   }
 }
