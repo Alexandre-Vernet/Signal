@@ -6,8 +6,8 @@ import 'dart:typed_data';
 import 'package:signal_app/user/user_service.dart';
 
 class NewsService {
-  // final String baseUrl = "https://signal-api.alexandre-vernet.fr/api";
-  final String baseUrl = "http://localhost:8080/api";
+  final String baseUrl = "https://signal-api.alexandre-vernet.fr/api";
+  // final String baseUrl = "http://localhost:8080/api";
 
   final UserService userService = UserService();
 

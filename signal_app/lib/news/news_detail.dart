@@ -66,7 +66,7 @@ class NewsDetailState extends State<NewsDetail> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
+          onPressed: () => context.pop(true),
         ),
         title: const Text(
           'Article',

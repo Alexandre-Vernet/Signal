@@ -206,7 +206,7 @@ public class NewsService {
         NewsEntity newsEntity = newsRepository.findById(newsId).orElseThrow((NewsNotFoundException::new));
         UserEntity userEntity = userRepository.findByUuid(uuid).orElseGet(() -> userService.create(uuid));
 
-        return userNewsRepository.findByNews_IdAndUser(newsId, userEntity)
+        return userNewsRepository.findByNewsAndUser(newsEntity, userEntity)
                 .orElseGet(() -> {
                     UserNews userNews = new UserNews(null,
                             userMapper.toDto(userEntity),

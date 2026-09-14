@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signal_app/news/news.dart';
 import 'package:signal_app/news/news_service.dart';
+import 'package:signal_app/router/router.dart';
 import 'package:signal_app/user/user_service.dart';
 import 'package:signal_app/utils/string_utils.dart';
 
@@ -14,7 +15,7 @@ class Home extends StatefulWidget {
   State createState() => HomeState();
 }
 
-class HomeState extends State<Home> {
+class HomeState extends State<Home> with RouteAware {
   List<News> newsList = [];
   bool isLoadingNews = true;
 
@@ -31,6 +32,28 @@ class HomeState extends State<Home> {
     _loadNews();
     _loadCategories();
     _initUser();
+  }
+
+  @override
+  void didPopNext() {
+    _loadNews();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final route = ModalRoute.of(context);
+
+    if (route != null) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
   }
 
   Future<void> _loadNews() async {

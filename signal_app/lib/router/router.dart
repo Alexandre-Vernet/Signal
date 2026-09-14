@@ -6,7 +6,9 @@ import 'package:signal_app/news/news_saved.dart';
 import '../custom_navigation_bar.dart';
 import '../news/news_detail.dart';
 
+final routeObserver = RouteObserver<ModalRoute<void>>();
 final router = GoRouter(
+  observers: [routeObserver],
   routes: [
     ShellRoute(
       builder: (context, state, child) {
