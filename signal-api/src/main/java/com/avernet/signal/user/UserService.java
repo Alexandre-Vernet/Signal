@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
 
     @Transactional
-    User create(User user) {
-        user.setCreatedAt(LocalDateTime.now());
-        UserEntity userEntity = userMapper.toEntity(user);
-        UserEntity userCreated = userRepository.save(userEntity);
-        return userMapper.toDto(userCreated);
+    public UserEntity create(String uuid) {
+        UserEntity userEntity = UserEntity.builder()
+                .uuid(uuid)
+                .createdAt(LocalDateTime.now())
+                .build();
+        return userRepository.save(userEntity);
     }
 }

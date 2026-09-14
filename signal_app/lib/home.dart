@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signal_app/news/news.dart';
 import 'package:signal_app/news/news_service.dart';
+import 'package:signal_app/news/user_service.dart';
 import 'package:signal_app/utils/string_utils.dart';
 
 import 'news/news_list.dart';
@@ -22,15 +23,17 @@ class HomeState extends State<Home> {
   Set<String> selectedCategories = {};
 
   final newsService = NewsService();
+  final userService = UserService();
 
   @override
   void initState() {
     super.initState();
-    loadNews();
-    loadCategories();
+    _loadNews();
+    _loadCategories();
+    _initUser();
   }
 
-  Future<void> loadNews() async {
+  Future<void> _loadNews() async {
     try {
       final result = selectedCategories.isEmpty
           ? await newsService.findAllNews()
@@ -49,7 +52,7 @@ class HomeState extends State<Home> {
     }
   }
 
-  Future<void> loadCategories() async {
+  Future<void> _loadCategories() async {
     try {
       final result = await newsService.getCategories();
 
@@ -63,6 +66,14 @@ class HomeState extends State<Home> {
       setState(() {
         isLoadingCategories = false;
       });
+    }
+  }
+
+  Future<void> _initUser() async {
+    try {
+      await userService.getUuid();
+    } catch(e) {
+      print(e);
     }
   }
 
@@ -111,7 +122,7 @@ class HomeState extends State<Home> {
       body: isLoadingNews
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: loadNews,
+              onRefresh: _loadNews,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 itemCount: newsList.length + 3,
@@ -266,7 +277,7 @@ class HomeState extends State<Home> {
       selectedCategories = selectedCategories;
     });
 
-    loadNews();
+    _loadNews();
   }
 
   Widget _buildCategoryFilter() {
@@ -355,6 +366,6 @@ class HomeState extends State<Home> {
 
   void _clearCategories() {
     selectedCategories = {};
-    loadNews();
+    _loadNews();
   }
 }

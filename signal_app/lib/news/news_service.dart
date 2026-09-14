@@ -3,15 +3,20 @@ import 'package:http/http.dart' as http;
 import 'package:signal_app/news/news.dart';
 import 'dart:typed_data';
 
-class NewsService {
-  final String baseUrl = "https://signal-api.alexandre-vernet.fr/api";
+import 'package:signal_app/news/user_service.dart';
 
-  // final String baseUrl = "http://localhost:8080/api";
+class NewsService {
+  // final String baseUrl = "https://signal-api.alexandre-vernet.fr/api";
+  final String baseUrl = "http://localhost:8080/api";
+
+  final UserService userService = UserService();
 
   Future<List<News>> findAllNews() async {
-    final response = await http.get(Uri.parse('$baseUrl/news'), headers: {
-      "X-User-UUID": "uuid"
-    });
+    final uuid = await userService.getUuid();
+    final response = await http.get(
+      Uri.parse('$baseUrl/news'),
+      headers: {"X-User-UUID": uuid},
+    );
     if (response.statusCode == 200) {
       final List<dynamic> json = jsonDecode(response.body);
 
@@ -86,9 +91,11 @@ class NewsService {
   }
 
   Future<News> markNewsAsRead(int id) async {
-    final response = await http.post(Uri.parse('$baseUrl/news/$id/read'), headers: {
-      "X-User-UUID": "uuid"
-    });
+    final uuid = await userService.getUuid();
+    final response = await http.post(
+      Uri.parse('$baseUrl/news/$id/read'),
+      headers: {"X-User-UUID": uuid},
+    );
     if (response.statusCode == 200) {
       final Map<String, dynamic> json = jsonDecode(response.body);
 
@@ -99,9 +106,11 @@ class NewsService {
   }
 
   Future<News> toggleBookmark(int id) async {
-    final response = await http.post(Uri.parse('$baseUrl/news/$id/bookmark'), headers: {
-      "X-User-UUID": "uuid"
-    });
+    final uuid = await userService.getUuid();
+    final response = await http.post(
+      Uri.parse('$baseUrl/news/$id/bookmark'),
+      headers: {"X-User-UUID": uuid},
+    );
     if (response.statusCode == 200) {
       final Map<String, dynamic> json = jsonDecode(response.body);
 

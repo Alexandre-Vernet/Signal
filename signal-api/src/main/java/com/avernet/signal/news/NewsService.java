@@ -1,18 +1,20 @@
 package com.avernet.signal.news;
 
-import com.avernet.signal.exception.ApiException;
-import com.avernet.signal.exception.ErrorCodeEnum;
+import com.avernet.signal.exception.NewsNotFoundException;
 import com.avernet.signal.news.news_categories.NewsCategoriesEntity;
 import com.avernet.signal.news.news_categories.NewsCategoriesRepository;
 import com.avernet.signal.news.news_countries.NewsCountriesEntity;
 import com.avernet.signal.news.news_keywords.NewsKeywordsEntity;
 import com.avernet.signal.user.UserEntity;
+import com.avernet.signal.user.UserMapper;
 import com.avernet.signal.user.UserRepository;
+import com.avernet.signal.user.UserService;
+import com.avernet.signal.user_news.UserNews;
 import com.avernet.signal.user_news.UserNewsEntity;
 import com.avernet.signal.user_news.UserNewsRepository;
+import com.avernet.signal.user_news.UserNewsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,32 +37,34 @@ public class NewsService {
     @Value("${newsdata-api-key}")
     private String apiKey;
 
+    private final UserService userService;
+    private final UserNewsService userNewsService;
+
     private final NewsRepository newsRepository;
     private final NewsCategoriesRepository newsCategoriesRepository;
     private final UserRepository userRepository;
     private final UserNewsRepository userNewsRepository;
 
-    @Transactional(readOnly = true)
+    private final UserMapper userMapper;
+
+    @Transactional
     public List<News> findAllNews(String uuid) {
         List<NewsEntity> newsEntityList = newsRepository.findAll().stream()
                 .sorted(Comparator.comparing(NewsEntity::getPublicationDate).reversed())
                 .toList();
 
-        UserEntity userEntity = userRepository.findByUuid(uuid);
+        Optional<UserEntity> userEntity = userRepository.findByUuid(uuid);
 
         return newsEntityList.stream()
                 .map(newsEntity -> {
                     News news = newsMapper.toDto(newsEntity);
 
-                    if (userEntity != null) {
-                        userEntity.getUserNews().stream()
-                                .filter(un -> un.getNews().getId().equals(news.getId()))
-                                .findFirst()
-                                .ifPresent(un -> {
-                                    news.setReadAt(un.getReadAt());
-                                    news.setBookmarked(un.isBookmarked());
-                                });
-                    }
+                    userEntity.flatMap(entity -> entity.getUserNews().stream()
+                            .filter(un -> un.getNews().getId().equals(news.getId()))
+                            .findFirst()).ifPresent(un -> {
+                        news.setReadAt(un.getReadAt());
+                        news.setBookmarked(un.isBookmarked());
+                    });
                     return news;
                 })
                 .toList();
@@ -67,19 +72,14 @@ public class NewsService {
 
     @Transactional(readOnly = true)
     public News getNews(Long id) {
-        NewsEntity newsEntity = newsRepository.findById(id)
-                .orElseThrow(() -> new ApiException(
-                        ErrorCodeEnum.NEWS_NOT_FOUND,
-                        "Cette actualité n'existe pas",
-                        HttpStatus.NOT_FOUND)
-                );
+        NewsEntity newsEntity = newsRepository.findById(id).orElseThrow((NewsNotFoundException::new));
 
         return newsMapper.toDto(newsEntity);
     }
 
     @Transactional(readOnly = true)
     public ResponseEntity<byte[]> getPublicationImage(Long id) {
-        NewsEntity newsEntity = newsRepository.findById(id).orElseThrow();
+        NewsEntity newsEntity = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
         RestClient restClient = RestClient.create();
 
         ResponseEntity<byte[]> response = restClient.get()
@@ -94,7 +94,7 @@ public class NewsService {
 
     @Transactional(readOnly = true)
     public ResponseEntity<byte[]> getSourceIcon(Long id) {
-        NewsEntity newsEntity = newsRepository.findById(id).orElseThrow();
+        NewsEntity newsEntity = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
         RestClient restClient = RestClient.create();
 
         ResponseEntity<byte[]> response = restClient.get()
@@ -120,33 +120,15 @@ public class NewsService {
 
     @Transactional
     public News markNewsAsRead(Long newsId, String uuid) {
-        NewsEntity newsEntity = newsRepository.findById(newsId)
-                .orElseThrow(() -> new ApiException(
-                        ErrorCodeEnum.NEWS_NOT_FOUND,
-                        "Cette actualité n'existe pas",
-                        HttpStatus.NOT_FOUND)
-                );
+        UserNewsEntity userNewsEntity = createOrUpdateUserNews(newsId, uuid);
+        userNewsEntity.setReadAt(LocalDateTime.now());
 
-        UserEntity userEntity = userRepository.findByUuid(uuid);
-        UserNewsEntity userNewsEntityExist = userNewsRepository.findByNews_IdAndUser(newsId, userEntity);
-        if (userNewsEntityExist != null) {
-            return newsMapper.toDto(userNewsEntityExist);
-        }
-
-        UserNewsEntity userNewsEntity = UserNewsEntity.builder()
-                .news(newsEntity)
-                .user(userEntity)
-                .readAt(LocalDateTime.now())
-                .build();
-
-        userNewsEntity = userNewsRepository.save(userNewsEntity);
         return newsMapper.toDto(userNewsEntity);
     }
 
     @Transactional
     public News toggleBookmark(Long newsId, String uuid) {
-        UserEntity userEntity = userRepository.findByUuid(uuid);
-        UserNewsEntity userNewsEntity = userNewsRepository.findByNews_IdAndUser(newsId, userEntity);
+        UserNewsEntity userNewsEntity = createOrUpdateUserNews(newsId, uuid);
         userNewsEntity.setBookmarked(!userNewsEntity.isBookmarked());
 
         return newsMapper.toDto(userNewsEntity);
@@ -211,5 +193,20 @@ public class NewsService {
         }
 
         return newsEntity;
+    }
+
+    private UserNewsEntity createOrUpdateUserNews(Long newsId, String uuid) {
+        NewsEntity newsEntity = newsRepository.findById(newsId).orElseThrow((NewsNotFoundException::new));
+        UserEntity userEntity = userRepository.findByUuid(uuid).orElseGet(() -> userService.create(uuid));
+
+        return userNewsRepository.findByNews_IdAndUser(newsId, userEntity)
+                .orElseGet(() -> {
+                    UserNews userNews = new UserNews(null,
+                            userMapper.toDto(userEntity),
+                            newsMapper.toDto(newsEntity),
+                            LocalDateTime.now()
+                    );
+                    return userNewsService.create(userNews);
+                });
     }
 }
