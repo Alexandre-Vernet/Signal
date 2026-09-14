@@ -8,6 +8,8 @@ import com.avernet.signal.user_news.UserNewsEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.time.LocalDateTime;
+
 @Mapper(componentModel = "spring")
 public interface NewsMapper extends GenericMapper<News, NewsEntity> {
 
@@ -15,6 +17,10 @@ public interface NewsMapper extends GenericMapper<News, NewsEntity> {
     @Mapping(source = "bookmarked", target = "bookmarked")
     @Mapping(source = "readAt", target = "readAt")
     News toDto(UserNewsEntity userNewsEntity);
+
+    @Mapping(target = "readAt", expression = "java(getReadAt(news, uuid))")
+    @Mapping(target = "bookmarked", expression = "java(getBookmarked(news, uuid))")
+    News toDto(NewsEntity news, String uuid);
 
     default String mapKeyword(NewsKeywordsEntity keywordsEntity) {
         return keywordsEntity.getKeyword();
@@ -44,5 +50,21 @@ public interface NewsMapper extends GenericMapper<News, NewsEntity> {
         NewsCountriesEntity entity = new NewsCountriesEntity();
         entity.setCountry(category);
         return entity;
+    }
+
+    default LocalDateTime getReadAt(NewsEntity news, String uuid) {
+        return news.getUserNews().stream()
+                .filter(u -> u.getUser().getUuid().equals(uuid))
+                .map(UserNewsEntity::getReadAt)
+                .findFirst()
+                .orElse(null);
+    }
+
+    default boolean getBookmarked(NewsEntity news, String uuid) {
+        return news.getUserNews().stream()
+                .filter(u -> u.getUser().getUuid().equals(uuid))
+                .map(UserNewsEntity::isBookmarked)
+                .findFirst()
+                .orElse(false);
     }
 }

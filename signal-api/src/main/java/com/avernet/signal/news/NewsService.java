@@ -158,6 +158,13 @@ public class NewsService {
         newsRepository.saveAll(newsEntityList);
     }
 
+    public List<News> findBookmarkNews(String uuid) {
+        List<NewsEntity> newsEntityList = newsRepository.findByUserNews_User_UuidAndUserNews_Bookmarked(uuid, true);
+        return newsEntityList.stream()
+                .map(news -> newsMapper.toDto(news, uuid))
+                .toList();
+    }
+
     private NewsEntity toNewsEntity(NewsDataResult result) {
         NewsEntity newsEntity = NewsEntity.builder()
                 .articleId(result.article_id())

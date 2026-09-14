@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signal_app/home.dart';
+import 'package:signal_app/news/news_saved.dart';
 
-import '../customNavigationBar.dart';
+import '../custom_navigation_bar.dart';
 import '../news/news_detail.dart';
 
 final router = GoRouter(
@@ -27,6 +28,12 @@ final router = GoRouter(
             final newsId = state.extra as int;
 
             return NewsDetail(newsId: newsId);
+          },
+        ),
+        GoRoute(
+          path: "/news-saved",
+          builder: (context, state) {
+            return NewsSaved();
           },
         ),
       ],

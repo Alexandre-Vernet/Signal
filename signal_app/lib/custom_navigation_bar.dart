@@ -12,7 +12,7 @@ class CustomNavigationBar extends StatelessWidget {
 
     int currentIndex = switch (location) {
       "/" => 0,
-      "/home" => 1,
+      "/news-saved" => 1,
       _ => 0,
     };
 
@@ -26,17 +26,17 @@ class CustomNavigationBar extends StatelessWidget {
             break;
 
           case 1:
-            context.go("/home");
+            context.go("/news-saved");
             break;
         }
       },
 
       items: [
-        BottomNavigationBarItem(label: "Carte", icon: Icon(Icons.dashboard)),
         BottomNavigationBarItem(
-          label: "Historique",
-          icon: Icon(Icons.local_parking),
+          label: "Actualités",
+          icon: Icon(Icons.sensors_rounded),
         ),
+        BottomNavigationBarItem(label: "Favoris", icon: Icon(Icons.bookmark)),
       ],
     );
   }

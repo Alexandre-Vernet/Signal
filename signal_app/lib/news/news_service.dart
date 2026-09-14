@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:signal_app/news/news.dart';
 import 'dart:typed_data';
 
-import 'package:signal_app/news/user_service.dart';
+import 'package:signal_app/user/user_service.dart';
 
 class NewsService {
   // final String baseUrl = "https://signal-api.alexandre-vernet.fr/api";
@@ -115,6 +115,21 @@ class NewsService {
       final Map<String, dynamic> json = jsonDecode(response.body);
 
       return News.fromJson(json);
+    }
+
+    throw Exception('Erreur lors du chargement des actualités');
+  }
+
+  Future<List<News>> getBookmarkNews() async {
+    final uuid = await userService.getUuid();
+    final response = await http.get(
+      Uri.parse('$baseUrl/news/bookmark'),
+      headers: {"X-User-UUID": uuid},
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> json = jsonDecode(response.body);
+
+      return json.map((item) => News.fromJson(item)).toList();
     }
 
     throw Exception('Erreur lors du chargement des actualités');

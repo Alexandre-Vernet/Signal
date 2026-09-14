@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signal_app/news/news.dart';
 import 'package:signal_app/news/news_service.dart';
-import 'package:signal_app/news/user_service.dart';
+import 'package:signal_app/user/user_service.dart';
 import 'package:signal_app/utils/string_utils.dart';
 
 import 'news/news_list.dart';
@@ -72,7 +72,7 @@ class HomeState extends State<Home> {
   Future<void> _initUser() async {
     try {
       await userService.getUuid();
-    } catch(e) {
+    } catch (e) {
       print(e);
     }
   }
@@ -125,7 +125,7 @@ class HomeState extends State<Home> {
               onRefresh: _loadNews,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                itemCount: newsList.length + 3,
+                itemCount: newsList.length,
                 itemBuilder: (context, index) {
                   // Hero
                   if (index == 0) {
@@ -142,7 +142,7 @@ class HomeState extends State<Home> {
                     return const SizedBox(height: 16);
                   }
 
-                  final news = newsList[index - 3];
+                  final news = newsList[index];
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),

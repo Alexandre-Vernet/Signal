@@ -48,6 +48,11 @@ public class NewsController {
     List<News> findByCategory(@RequestParam("category") List<String> category) {
         return newsService.findByCategory(category);
     }
+    
+    @GetMapping("bookmark")
+    List<News> findBookmarkNews( @RequestHeader(value = "X-User-UUID") String uuid) {
+        return newsService.findBookmarkNews(uuid);
+    }
 
     @PostMapping("{id}/read")
     News markNewsAsRead(@PathVariable Long id, @RequestHeader(value = "X-User-UUID") String uuid) {
