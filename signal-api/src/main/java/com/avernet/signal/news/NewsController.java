@@ -25,8 +25,8 @@ public class NewsController {
     }
     
     @GetMapping("{id}")
-    News getNews(@PathVariable Long id) {
-        return newsService.getNews(id);
+    News getNews(@PathVariable Long id, @RequestHeader(value = "X-User-UUID", required = false) String uuid) {
+        return newsService.getNews(id, uuid);
     }
     
     @GetMapping("{id}/image/publication-image")

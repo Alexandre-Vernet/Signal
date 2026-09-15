@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface NewsCategoriesRepository extends JpaRepository<NewsCategoriesEntity, Long> {
     @Query("""
-    SELECT DISTINCT n.category from NewsCategoriesEntity n order by n.category ASC
+    SELECT DISTINCT n.category FROM NewsCategoriesEntity n ORDER BY n.category ASC
     """)
     List<String> findCategories();
 }

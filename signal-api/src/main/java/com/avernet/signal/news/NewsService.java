@@ -71,9 +71,15 @@ public class NewsService {
     }
 
     @Transactional(readOnly = true)
-    public News getNews(Long id) {
+    public News getNews(Long id, String uuid) {
         NewsEntity newsEntity = newsRepository.findById(id).orElseThrow((NewsNotFoundException::new));
-
+        Optional<UserEntity> userEntityOptional = userRepository.findByUuid(uuid);
+        if (userEntityOptional.isPresent()) {
+            Optional<UserNewsEntity> userNewsEntityOptional = userNewsRepository.findByNewsAndUser(newsEntity, userEntityOptional.get());
+            if (userNewsEntityOptional.isPresent()) {
+                return newsMapper.toDto(userNewsEntityOptional.get());
+            }
+        }
         return newsMapper.toDto(newsEntity);
     }
 

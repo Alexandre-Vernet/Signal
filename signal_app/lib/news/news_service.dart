@@ -7,6 +7,7 @@ import 'package:signal_app/user/user_service.dart';
 
 class NewsService {
   final String baseUrl = "https://signal-api.alexandre-vernet.fr/api";
+
   // final String baseUrl = "http://localhost:8080/api";
 
   final UserService userService = UserService();
@@ -27,7 +28,12 @@ class NewsService {
   }
 
   Future<News> findNews(int id) async {
-    final response = await http.get(Uri.parse('$baseUrl/news/$id'));
+    final uuid = await userService.getUuid();
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/news/$id'),
+      headers: {"X-User-UUID": uuid},
+    );
     if (response.statusCode == 200) {
       final Map<String, dynamic> json = jsonDecode(response.body);
 
