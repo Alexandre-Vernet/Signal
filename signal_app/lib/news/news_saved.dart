@@ -48,7 +48,7 @@ class NewsSavedState extends State<NewsSaved> {
       body: newsList.isEmpty
           ? Center(child: Text("Aucun favori pour l'instant"))
           : ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 50),
               itemCount: newsList.length,
               itemBuilder: (context, index) {
                 final news = newsList[index];
