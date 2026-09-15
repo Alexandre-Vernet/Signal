@@ -27,11 +27,11 @@ class NewsDetailState extends State<NewsDetail> {
     loadNews();
     markNewsAsRead();
   }
-  
+
   Future<void> markNewsAsRead() async {
     try {
       await newsService.markNewsAsRead(widget.newsId);
-    } catch(e) {
+    } catch (e) {
       print(e);
     }
   }
@@ -232,14 +232,14 @@ class NewsDetailState extends State<NewsDetail> {
       ),
     );
   }
-  
+
   void toggleBookmark() async {
     try {
-     final response = await newsService.toggleBookmark(widget.newsId);
-     setState(() {
-       news = response;
-     });
-    } catch(e) {
+      final response = await newsService.toggleBookmark(widget.newsId);
+      setState(() {
+        news = response;
+      });
+    } catch (e) {
       print(e);
     }
   }

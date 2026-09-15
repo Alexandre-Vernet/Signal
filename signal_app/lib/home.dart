@@ -31,7 +31,6 @@ class HomeState extends State<Home> with RouteAware {
     super.initState();
     _loadNews();
     _loadCategories();
-    _initUser();
   }
 
   @override
@@ -89,14 +88,6 @@ class HomeState extends State<Home> with RouteAware {
       setState(() {
         isLoadingCategories = false;
       });
-    }
-  }
-
-  Future<void> _initUser() async {
-    try {
-      await userService.getUuid();
-    } catch (e) {
-      print(e);
     }
   }
 
