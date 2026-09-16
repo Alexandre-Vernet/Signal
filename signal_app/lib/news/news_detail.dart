@@ -58,9 +58,6 @@ class NewsDetailState extends State<NewsDetail> {
     if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    
-    print("coucou");
-    print(news.bookmarked);
 
     return Scaffold(
       backgroundColor: Colors.white,

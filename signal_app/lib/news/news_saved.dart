@@ -58,8 +58,15 @@ class NewsSavedState extends State<NewsSaved> {
                   child: NewsList(
                     key: ValueKey(news.id),
                     news: news,
-                    onTap: () {
-                      context.push('/news', extra: news.id);
+                    onTap: () async {
+                      final result = await context.push(
+                        '/news',
+                        extra: news.id,
+                      );
+
+                      if (result == true) {
+                        _loadNews();
+                      }
                     },
                   ),
                 );
