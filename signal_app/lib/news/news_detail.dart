@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../images/proxy_image.dart';
 import '../images/source_icon.dart';
 import '../utils/date_utils.dart';
+import '../utils/error_page.dart';
+import '../utils/toast.dart';
 import 'news.dart';
 
 class NewsDetail extends StatefulWidget {
@@ -18,46 +20,41 @@ class NewsDetail extends StatefulWidget {
 
 class NewsDetailState extends State<NewsDetail> {
   final newsService = NewsService();
-  late News news;
-  bool isLoading = true;
+  News? news;
+  bool isLoading = false;
+  bool hasError = true;
 
   @override
   void initState() {
     super.initState();
-    loadNews();
+    _loadNews();
     markNewsAsRead();
   }
 
   Future<void> markNewsAsRead() async {
-    try {
-      await newsService.markNewsAsRead(widget.newsId);
-    } catch (e) {
-      print(e);
-    }
+    await newsService.markNewsAsRead(widget.newsId);
   }
 
-  Future<void> loadNews() async {
+  Future<void> _loadNews() async {
     try {
       final result = await newsService.findNews(widget.newsId);
 
       setState(() {
         news = result;
         isLoading = false;
+        hasError = false;
       });
     } catch (e) {
-      print(e);
-
       setState(() {
         isLoading = false;
+        hasError = true;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    final currentNews = news;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -72,74 +69,82 @@ class NewsDetailState extends State<NewsDetail> {
           'Article',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
-        actions: [
-          IconButton(
-            tooltip: news.bookmarked == true
-                ? 'Retirer des favoris'
-                : 'Ajouter aux favoris',
-            icon: Icon(
-              news.bookmarked == true
-                  ? Icons.bookmark_rounded
-                  : Icons.bookmark_border_rounded,
-            ),
-            onPressed: toggleBookmark,
-          ),
-        ],
+        actions: currentNews != null
+            ? [
+                IconButton(
+                  tooltip: currentNews.bookmarked == true
+                      ? 'Retirer des favoris'
+                      : 'Ajouter aux favoris',
+                  icon: Icon(
+                    currentNews.bookmarked == true
+                        ? Icons.bookmark_rounded
+                        : Icons.bookmark_border_rounded,
+                  ),
+                  onPressed: _toggleBookmark,
+                ),
+              ]
+            : null,
       ),
 
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildPublicationImage(),
-
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : hasError
+          ? ErrorPage(onRetry: _loadNews)
+          : currentNews != null
+          ? SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSourceIcon(),
+                  _buildPublicationImage(currentNews),
 
-                  const SizedBox(height: 18),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSourceIcon(currentNews),
 
-                  Text(
-                    news.title,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      height: 1.15,
+                        const SizedBox(height: 18),
+
+                        Text(
+                          currentNews.title,
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            height: 1.15,
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        if (currentNews.description != null)
+                          Text(
+                            currentNews.description!,
+                            style: TextStyle(
+                              fontSize: 17,
+                              height: 1.55,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+
+                        const SizedBox(height: 28),
+
+                        _buildTags(currentNews),
+
+                        const SizedBox(height: 32),
+
+                        _buildOriginalArticleButton(currentNews, context),
+                      ],
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  if (news.description != null)
-                    Text(
-                      news.description!,
-                      style: TextStyle(
-                        fontSize: 17,
-                        height: 1.55,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-
-                  const SizedBox(height: 28),
-
-                  _buildTags(),
-
-                  const SizedBox(height: 32),
-
-                  _buildOriginalArticleButton(context),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
+            )
+          : null,
     );
   }
 
-  Widget _buildPublicationImage() {
+  Widget _buildPublicationImage(News news) {
     return ProxyImage(
       imageFuture: news.imageUrl != null
           ? newsService.getPublicationImage(news.id)
@@ -150,7 +155,7 @@ class NewsDetailState extends State<NewsDetail> {
     );
   }
 
-  Widget _buildSourceIcon() {
+  Widget _buildSourceIcon(News news) {
     return Row(
       children: [
         if (news.sourceIcon.isNotEmpty)
@@ -180,7 +185,7 @@ class NewsDetailState extends State<NewsDetail> {
     );
   }
 
-  Widget _buildTags() {
+  Widget _buildTags(News news) {
     final tags = [...news.categories, ...news.keywords];
 
     if (tags.isEmpty) {
@@ -210,7 +215,7 @@ class NewsDetailState extends State<NewsDetail> {
     );
   }
 
-  Widget _buildOriginalArticleButton(BuildContext context) {
+  Widget _buildOriginalArticleButton(News news, BuildContext context) {
     return SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
@@ -233,14 +238,18 @@ class NewsDetailState extends State<NewsDetail> {
     );
   }
 
-  void toggleBookmark() async {
+  Future<void> _toggleBookmark() async {
     try {
       final response = await newsService.toggleBookmark(widget.newsId);
+      if (!mounted) return;
+
       setState(() {
         news = response;
       });
     } catch (e) {
-      print(e);
+      if (!mounted) return;
+
+      showToast(context, "Impossible d'enregistrer l'actualité");
     }
   }
 }

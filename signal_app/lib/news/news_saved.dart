@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signal_app/news/news_service.dart';
+import 'package:signal_app/utils/error_page.dart';
 
 import 'news.dart';
 import 'news_list.dart';
@@ -16,7 +17,8 @@ class NewsSavedState extends State<NewsSaved> {
   final newsService = NewsService();
 
   List<News> newsList = [];
-  bool isLoadingNews = true;
+  bool isLoading = true;
+  bool hasError = false;
 
   @override
   void initState() {
@@ -30,13 +32,13 @@ class NewsSavedState extends State<NewsSaved> {
 
       setState(() {
         newsList = result;
-        isLoadingNews = false;
+        isLoading = false;
+        hasError = false;
       });
     } catch (e) {
-      print(e);
-
       setState(() {
-        isLoadingNews = false;
+        isLoading = false;
+        hasError = true;
       });
     }
   }
@@ -45,7 +47,11 @@ class NewsSavedState extends State<NewsSaved> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: newsList.isEmpty
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : hasError
+          ? ErrorPage(onRetry: _loadNews)
+          : newsList.isEmpty
           ? Center(child: Text("Aucun favori pour l'instant"))
           : ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 50),
