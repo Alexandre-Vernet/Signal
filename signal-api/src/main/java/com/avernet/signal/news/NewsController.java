@@ -45,7 +45,7 @@ public class NewsController {
     }
 
     @GetMapping("category")
-    List<News> findByCategory(@RequestParam("category") List<String> category) {
+    List<News> findByCategory(@RequestParam("category") String category) {
         return newsService.findByCategory(category);
     }
     

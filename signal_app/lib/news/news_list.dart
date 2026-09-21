@@ -163,18 +163,29 @@ class NewsListState extends State<NewsList> {
             widget.news.sourceName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
 
-        Text(
-          CustomDateUtils.formatDate(widget.news.publicationDate),
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+        const SizedBox(width: 7),
+
+        Flexible(
+          child: Text(
+            CustomDateUtils.formatDate(widget.news.publicationDate),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade500,
+            ),
+          ),
         ),
       ],
     );
   }
-
   Widget _buildTag(String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),

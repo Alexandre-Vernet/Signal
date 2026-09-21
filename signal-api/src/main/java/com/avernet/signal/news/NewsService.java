@@ -119,8 +119,8 @@ public class NewsService {
     }
 
     @Transactional(readOnly = true)
-    public List<News> findByCategory(List<String> category) {
-        List<NewsEntity> newsEntityList = newsRepository.findDistinctByCategories_CategoryInOrderByPublicationDateDesc(category);
+    public List<News> findByCategory(String category) {
+        List<NewsEntity> newsEntityList = newsRepository.findDistinctByCategories_CategoryOrderByPublicationDateDesc(category);
         return newsMapper.toDtoList(newsEntityList);
     }
 

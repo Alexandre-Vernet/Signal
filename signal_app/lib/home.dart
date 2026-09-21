@@ -4,6 +4,7 @@ import 'package:signal_app/news/news.dart';
 import 'package:signal_app/news/news_service.dart';
 import 'package:signal_app/router/router.dart';
 import 'package:signal_app/user/user_service.dart';
+import 'package:signal_app/utils/error_page.dart';
 import 'package:signal_app/utils/string_utils.dart';
 
 import 'news/news_list.dart';
@@ -18,10 +19,11 @@ class Home extends StatefulWidget {
 class HomeState extends State<Home> with RouteAware {
   List<News> newsList = [];
   bool isLoadingNews = true;
+  bool hasError = false;
 
   bool isLoadingCategories = true;
   List<String> categories = [];
-  Set<String> selectedCategories = {};
+  String? selectedCategory;
 
   final newsService = NewsService();
   final userService = UserService();
@@ -57,19 +59,19 @@ class HomeState extends State<Home> with RouteAware {
 
   Future<void> _loadNews() async {
     try {
-      final result = selectedCategories.isEmpty
+      final category = selectedCategory;
+      final result = category == null
           ? await newsService.findAllNews()
-          : await newsService.getNewsByCategories(selectedCategories.toList());
-
+          : await newsService.getNewsByCategories(category);
       setState(() {
         newsList = result;
         isLoadingNews = false;
+        hasError = false;
       });
     } catch (e) {
-      print(e);
-
       setState(() {
         isLoadingNews = false;
+        hasError = true;
       });
     }
   }
@@ -135,6 +137,8 @@ class HomeState extends State<Home> with RouteAware {
 
       body: isLoadingNews
           ? const Center(child: CircularProgressIndicator())
+          : hasError
+          ? ErrorPage(onRetry: _loadNews)
           : RefreshIndicator(
               onRefresh: _loadNews,
               child: ListView.builder(
@@ -282,13 +286,8 @@ class HomeState extends State<Home> with RouteAware {
   }
 
   void _selectCategory(String category) {
-    if (selectedCategories.contains(category)) {
-      selectedCategories.remove(category);
-    } else {
-      selectedCategories.add(category);
-    }
     setState(() {
-      selectedCategories = selectedCategories;
+      selectedCategory = category;
     });
 
     _loadNews();
@@ -318,9 +317,7 @@ class HomeState extends State<Home> with RouteAware {
         itemBuilder: (context, index) {
           final category = index == 0 ? null : categories[index - 1];
 
-          final isSelected = category == null
-              ? selectedCategories.isEmpty
-              : selectedCategories.contains(category);
+          final isSelected = category != null && selectedCategory == category;
 
           return GestureDetector(
             onTap: () {
@@ -379,7 +376,7 @@ class HomeState extends State<Home> with RouteAware {
   }
 
   void _clearCategories() {
-    selectedCategories = {};
+    selectedCategory = null;
     _loadNews();
   }
 }

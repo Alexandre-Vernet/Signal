@@ -6,9 +6,9 @@ import 'dart:typed_data';
 import 'package:signal_app/user/user_service.dart';
 
 class NewsService {
-  final String baseUrl = "https://signal-api.alexandre-vernet.fr/api";
+  // final String baseUrl = "https://signal-api.alexandre-vernet.fr/api";
 
-  // final String baseUrl = "http://localhost:8080/api";
+  final String baseUrl = "http://localhost:8080/api";
 
   final UserService userService = UserService();
 
@@ -75,15 +75,10 @@ class NewsService {
     throw Exception('Erreur lors du chargement des catégories');
   }
 
-  Future<List<News>> getNewsByCategories(List<String> categories) async {
-    final uri = Uri.parse('$baseUrl/news/category').replace(
-      query: categories
-          .map(
-            (category) =>
-                'category=${Uri.encodeQueryComponent(category.toLowerCase())}',
-          )
-          .join('&'),
-    );
+  Future<List<News>> getNewsByCategories(String category) async {
+    final uri = Uri.parse(
+      '$baseUrl/news/category',
+    ).replace(queryParameters: {'category': category});
 
     final response = await http.get(uri);
 
