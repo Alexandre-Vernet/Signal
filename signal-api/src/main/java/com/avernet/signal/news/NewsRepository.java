@@ -7,5 +7,5 @@ import java.util.List;
 public interface NewsRepository extends JpaRepository<NewsEntity, Long> {
     List<NewsEntity> findDistinctByCategories_CategoryOrderByPublicationDateDesc(String category);
 
-    List<NewsEntity> findByUserNews_User_UuidAndUserNews_Bookmarked(String uuid, boolean userNewsBookmarked);
+    List<NewsEntity> findByUserNews_User_UuidAndUserNews_BookmarkedTrue(String uuid);
 }

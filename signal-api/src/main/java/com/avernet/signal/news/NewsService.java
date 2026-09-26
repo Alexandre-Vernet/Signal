@@ -53,17 +53,17 @@ public class NewsService {
                 .sorted(Comparator.comparing(NewsEntity::getPublicationDate).reversed())
                 .toList();
 
-        Optional<UserEntity> userEntity = userRepository.findByUuid(uuid);
+        Optional<UserEntity> userEntityOptional = userRepository.findByUuid(uuid);
 
         return newsEntityList.stream()
                 .map(newsEntity -> {
                     News news = newsMapper.toDto(newsEntity);
 
-                    userEntity.flatMap(entity -> entity.getUserNews().stream()
-                            .filter(un -> un.getNews().getId().equals(news.getId()))
-                            .findFirst()).ifPresent(un -> {
-                        news.setReadAt(un.getReadAt());
-                        news.setBookmarked(un.isBookmarked());
+                    userEntityOptional.flatMap(userEntity -> userEntity.getUserNews().stream()
+                            .filter(userNewsEntity -> userNewsEntity.getNews().getId().equals(news.getId()))
+                            .findFirst()).ifPresent(userNewsEntity -> {
+                        news.setReadAt(userNewsEntity.getReadAt());
+                        news.setBookmarked(userNewsEntity.isBookmarked());
                     });
                     return news;
                 })
@@ -126,7 +126,7 @@ public class NewsService {
 
     @Transactional
     public News markNewsAsRead(Long newsId, String uuid) {
-        UserNewsEntity userNewsEntity = createOrUpdateUserNews(newsId, uuid);
+        UserNewsEntity userNewsEntity = findOrCreateUserNews(newsId, uuid);
         userNewsEntity.setReadAt(LocalDateTime.now());
 
         return newsMapper.toDto(userNewsEntity);
@@ -134,7 +134,7 @@ public class NewsService {
 
     @Transactional
     public News toggleBookmark(Long newsId, String uuid) {
-        UserNewsEntity userNewsEntity = createOrUpdateUserNews(newsId, uuid);
+        UserNewsEntity userNewsEntity = findOrCreateUserNews(newsId, uuid);
         userNewsEntity.setBookmarked(!userNewsEntity.isBookmarked());
 
         return newsMapper.toDto(userNewsEntity);
@@ -165,7 +165,7 @@ public class NewsService {
     }
 
     public List<News> findBookmarkNews(String uuid) {
-        List<NewsEntity> newsEntityList = newsRepository.findByUserNews_User_UuidAndUserNews_Bookmarked(uuid, true);
+        List<NewsEntity> newsEntityList = newsRepository.findByUserNews_User_UuidAndUserNews_BookmarkedTrue(uuid);
         return newsEntityList.stream()
                 .map(news -> newsMapper.toDto(news, uuid))
                 .toList();
@@ -208,7 +208,7 @@ public class NewsService {
         return newsEntity;
     }
 
-    private UserNewsEntity createOrUpdateUserNews(Long newsId, String uuid) {
+    private UserNewsEntity findOrCreateUserNews(Long newsId, String uuid) {
         NewsEntity newsEntity = newsRepository.findById(newsId).orElseThrow((NewsNotFoundException::new));
         UserEntity userEntity = userRepository.findByUuid(uuid).orElseGet(() -> userService.create(uuid));
 

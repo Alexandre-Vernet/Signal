@@ -59,6 +59,11 @@ class HomeState extends State<Home> with RouteAware {
 
   Future<void> _loadNews() async {
     try {
+      setState(() {
+        isLoadingNews = true;
+        hasError = false;
+      });
+
       final category = selectedCategory;
       final result = category == null
           ? await newsService.findAllNews()
@@ -85,8 +90,6 @@ class HomeState extends State<Home> with RouteAware {
         isLoadingCategories = false;
       });
     } catch (e) {
-      print(e);
-
       setState(() {
         isLoadingCategories = false;
       });
@@ -135,46 +138,60 @@ class HomeState extends State<Home> with RouteAware {
         ),
       ),
 
-      body: isLoadingNews
-          ? const Center(child: CircularProgressIndicator())
-          : hasError
-          ? ErrorPage(onRetry: _loadNews)
-          : RefreshIndicator(
-              onRefresh: _loadNews,
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                itemCount: newsList.length,
-                itemBuilder: (context, index) {
-                  // Hero
-                  if (index == 0) {
-                    return _buildHeroArea();
-                  }
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          itemCount: isLoadingNews
+              ? 4 // Hero + categories + spacer + loader
+              : hasError
+              ? 4 // Hero + categories + spacer + error
+              : newsList.length + 3,
+          itemBuilder: (context, index) {
+            // Hero
+            if (index == 0) {
+              return _buildHeroArea();
+            }
 
-                  // Categories
-                  if (index == 1) {
-                    return _buildCategoryFilter();
-                  }
+            // Categories
+            if (index == 1) {
+              return _buildCategoryFilter();
+            }
 
-                  // Spacer
-                  if (index == 2) {
-                    return const SizedBox(height: 16);
-                  }
+            // Spacer
+            if (index == 2) {
+              return const SizedBox(height: 16);
+            }
 
-                  final news = newsList[index];
+            // Loading
+            if (isLoadingNews) {
+              return const Padding(
+                padding: EdgeInsets.only(top: 32),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: NewsList(
-                      key: ValueKey(news.id),
-                      news: news,
-                      onTap: () {
-                        context.push('/news', extra: news.id);
-                      },
-                    ),
-                  );
+            // Error
+            if (hasError) {
+              return ErrorPage(onRetry: _loadNews);
+            }
+
+            // News
+            final news = newsList[index - 3];
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: NewsList(
+                key: ValueKey(news.id),
+                news: news,
+                onTap: () {
+                  context.push('/news', extra: news.id);
                 },
               ),
-            ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -378,5 +395,12 @@ class HomeState extends State<Home> with RouteAware {
   void _clearCategories() {
     selectedCategory = null;
     _loadNews();
+  }
+
+  Future<void> _onRefresh() async {
+    setState(() {
+      selectedCategory = null;
+    });
+    await _loadNews();
   }
 }
